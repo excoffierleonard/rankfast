@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 /// Sorts `items` using the Ford-Johnson merge-insertion algorithm,
 /// which is designed to minimize the number of calls to `better`.
 ///
@@ -12,6 +10,7 @@ use std::collections::HashMap;
 /// # Panics
 ///
 /// Cannot panic. The internal `expect` is guarded by construction.
+#[must_use]
 pub fn rank_items<T, F>(items: Vec<T>, mut better: F) -> Vec<T>
 where
     F: FnMut(&T, &T) -> bool,
@@ -43,17 +42,18 @@ fn ford_johnson(elements: Vec<usize>, cmp: &mut impl FnMut(usize, usize) -> bool
     // goes into the recursive step; the better element ("partner") gets a
     // free insertion later because partner < main.
     let num_pairs = n / 2;
+    let max_elem = elements.iter().copied().max().unwrap_or(0);
     let mut mains = Vec::with_capacity(num_pairs);
-    let mut partner_of: HashMap<usize, usize> = HashMap::with_capacity(num_pairs);
+    let mut partner_of = vec![0usize; max_elem + 1];
 
     for i in 0..num_pairs {
         let (a, b) = (elements[2 * i], elements[2 * i + 1]);
         if cmp(a, b) {
             mains.push(b);
-            partner_of.insert(b, a);
+            partner_of[b] = a;
         } else {
             mains.push(a);
-            partner_of.insert(a, b);
+            partner_of[a] = b;
         }
     }
     let straggler = if n % 2 == 1 {
@@ -69,7 +69,7 @@ fn ford_johnson(elements: Vec<usize>, cmp: &mut impl FnMut(usize, usize) -> bool
     // partner[sorted_mains[0]] is better than sorted_mains[0], which is better
     // than sorted_mains[1], etc. So the partner goes at the front for free.
     let mut chain = Vec::with_capacity(n);
-    chain.push(partner_of[&sorted_mains[0]]);
+    chain.push(partner_of[sorted_mains[0]]);
     chain.extend_from_slice(&sorted_mains);
 
     // Step 4: Collect remaining partners (and straggler) for insertion.
@@ -77,7 +77,7 @@ fn ford_johnson(elements: Vec<usize>, cmp: &mut impl FnMut(usize, usize) -> bool
     // main's current position in the chain.
     let mut pending: Vec<(usize, Option<usize>)> = Vec::new();
     for &m in sorted_mains.iter().skip(1) {
-        pending.push((partner_of[&m], Some(m)));
+        pending.push((partner_of[m], Some(m)));
     }
     if let Some(s) = straggler {
         pending.push((s, None));
@@ -182,7 +182,7 @@ mod tests {
         }
     }
 
-    fn permute(items: &mut Vec<usize>, k: usize, f: &mut impl FnMut(&[usize])) {
+    fn permute(items: &mut [usize], k: usize, f: &mut impl FnMut(&[usize])) {
         if k <= 1 {
             f(items);
             return;

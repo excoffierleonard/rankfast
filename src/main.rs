@@ -30,7 +30,7 @@ fn main() {
 fn compare(a: &str, b: &str) -> bool {
     loop {
         print!("Which is better? Type A or B: [{a}] vs [{b}] ");
-        let _ = io::stdout().flush();
+        io::stdout().flush().ok();
 
         let mut input = String::new();
         if io::stdin().read_line(&mut input).is_err() {
