@@ -1,5 +1,7 @@
 use std::io::{self, Write};
 
+use rankfast::rank_items;
+
 fn main() {
     // Hardcoded items to rank.
     let items = vec![
@@ -13,12 +15,7 @@ fn main() {
         "White".to_string(),
     ];
 
-    let mut ranking: Vec<String> = Vec::new();
-
-    for item in items {
-        let idx = binary_insert_index(&item, &ranking);
-        ranking.insert(idx, item);
-    }
+    let ranking = rank_items(items, |a, b| compare(a, b));
 
     println!("Final ranking:");
     if ranking.is_empty() {
@@ -30,23 +27,9 @@ fn main() {
     }
 }
 
-fn binary_insert_index(item: &str, ranking: &[String]) -> usize {
-    let mut lo = 0usize;
-    let mut hi = ranking.len();
-    while lo < hi {
-        let mid = (lo + hi) / 2;
-        if compare(item, &ranking[mid]) {
-            hi = mid;
-        } else {
-            lo = mid + 1;
-        }
-    }
-    lo
-}
-
 fn compare(a: &str, b: &str) -> bool {
     loop {
-        print!("Which is better? Type A or B: [{}] vs [{}] ", a, b);
+        print!("Which is better? Type A or B: [{a}] vs [{b}] ");
         let _ = io::stdout().flush();
 
         let mut input = String::new();
