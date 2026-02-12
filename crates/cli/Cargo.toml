@@ -1,0 +1,10 @@
+[package]
+name = "rankfast-cli"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+rankfast = { workspace = true }
+
+[lints]
+workspace = true

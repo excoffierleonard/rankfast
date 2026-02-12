@@ -1,11 +1,6 @@
 [build]
 target = "index.html"
 dist = "dist"
-features = "web"
-
-[watch]
-watch = []
-ignore = []
 
 [serve]
 port = 3000
