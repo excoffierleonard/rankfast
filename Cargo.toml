@@ -3,7 +3,22 @@ name = "rankfast"
 version = "0.1.0"
 edition = "2024"
 
+[features]
+cli = []
+web = ["leptos"]
+
 [dependencies]
+leptos = { version = "0.8.15", features = ["csr"], optional = true }
 
 [lints.clippy]
 pedantic = "warn"
+
+[[bin]]
+name = "rankfast-cli"
+path = "src/bin/cli.rs"
+required-features = ["cli"]
+
+[[bin]]
+name = "rankfast-web"
+path = "src/bin/web.rs"
+required-features = ["web"]
