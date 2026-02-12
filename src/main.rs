@@ -1,6 +1,6 @@
 use std::io::{self, Write};
 
-use rankfast::rank_items;
+use rankfast::{estimate_turns, rank_items};
 
 fn main() {
     // Hardcoded items to rank.
@@ -14,6 +14,13 @@ fn main() {
         "Purple".to_string(),
         "White".to_string(),
     ];
+
+    let estimate = estimate_turns(items.len());
+    println!(
+        "Estimated turns (upper bound) for {} items: {}",
+        items.len(),
+        estimate
+    );
 
     let ranking = rank_items(items, |a, b| compare(a, b));
 

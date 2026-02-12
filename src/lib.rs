@@ -30,6 +30,30 @@ where
         .collect()
 }
 
+/// Returns an upper-bound estimate of the number of comparisons (turns)
+/// `rank_items` may need for `n` items.
+///
+/// The estimate assumes worst-case paths in binary searches. Actual turns
+/// can be lower depending on the comparator outcomes.
+#[must_use]
+pub fn estimate_turns(n: usize) -> usize {
+    if n <= 1 {
+        return 0;
+    }
+
+    let num_pairs = n / 2;
+    let mut total = num_pairs + estimate_turns(num_pairs);
+
+    // After the initial chain is built, we insert the remaining elements.
+    // Each insertion performs a binary search over a prefix of the chain.
+    // We use an upper bound where the prefix is as large as possible.
+    for chain_len in (num_pairs + 1)..n {
+        total += ceil_log2(chain_len + 1);
+    }
+
+    total
+}
+
 /// Sorts a vec of element IDs using Ford-Johnson.
 /// `cmp(a, b)` returns true when `a` should rank before `b`.
 fn ford_johnson(elements: Vec<usize>, cmp: &mut impl FnMut(usize, usize) -> bool) -> Vec<usize> {
@@ -96,6 +120,19 @@ fn ford_johnson(elements: Vec<usize>, cmp: &mut impl FnMut(usize, usize) -> bool
     }
 
     chain
+}
+
+fn ceil_log2(value: usize) -> usize {
+    if value <= 1 {
+        return 0;
+    }
+    let mut v = value - 1;
+    let mut bits = 0usize;
+    while v > 0 {
+        bits += 1;
+        v >>= 1;
+    }
+    bits
 }
 
 fn binary_search_pos(
