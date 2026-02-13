@@ -154,7 +154,8 @@ fn binary_search_pos(
 
 /// Returns indices into a `pending` array of length `count`, ordered by
 /// Jacobsthal numbers for optimal insertion.
-fn jacobsthal_order(count: usize) -> Vec<usize> {
+#[must_use]
+pub fn jacobsthal_order(count: usize) -> Vec<usize> {
     if count == 0 {
         return Vec::new();
     }

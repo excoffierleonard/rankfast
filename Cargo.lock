@@ -1147,6 +1147,7 @@ name = "rankfast-web"
 version = "0.1.0"
 dependencies = [
  "leptos",
+ "rankfast",
 ]
 
 [[package]]

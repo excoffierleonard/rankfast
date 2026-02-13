@@ -1,3 +1,333 @@
+$font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  "Helvetica Neue", Arial, sans-serif;
+
+$color-bg: #fafafa;
+$color-surface: #ffffff;
+$color-primary: #4f46e5;
+$color-primary-hover: #4338ca;
+$color-text: #1e1b4b;
+$color-text-secondary: #6b7280;
+$color-border: #e5e7eb;
+$color-gold: #f59e0b;
+$color-tag-bg: #f3f4f6;
+
+$radius-sm: 6px;
+$radius-md: 10px;
+$radius-lg: 14px;
+$radius-full: 9999px;
+
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+$max-width: 540px;
+
+// Reset & base
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-    text-align: center;
+  font-family: $font-stack;
+  background: $color-bg;
+  color: $color-text;
+  line-height: 1.5;
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+
+// App container
+
+.app {
+  max-width: $max-width;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+// Header
+
+.header {
+  text-align: center;
+  padding-top: 12px;
+
+  h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+  }
+}
+
+.subtitle {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  margin-top: 2px;
+}
+
+// Progress
+
+.progress-area {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  padding: 16px 20px;
+  box-shadow: $shadow-sm;
+}
+
+.progress-text {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  margin-bottom: 10px;
+}
+
+.progress-numbers {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: $color-text;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: $color-border;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: $color-primary;
+  border-radius: $radius-full;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+// Comparison
+
+.compare {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: 32px 24px;
+  box-shadow: $shadow-md;
+  text-align: center;
+}
+
+.compare-prompt {
+  font-size: 1rem;
+  font-weight: 500;
+  color: $color-text-secondary;
+  margin-bottom: 24px;
+}
+
+.compare-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.choice-btn {
+  flex: 1;
+  max-width: 200px;
+  padding: 14px 24px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: $color-surface;
+  background: $color-primary;
+  border: 2px solid $color-primary;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    background: $color-primary-hover;
+    border-color: $color-primary-hover;
+    box-shadow: 0 4px 14px rgba($color-primary, 0.35);
+  }
+
+  &:active {
+    transform: scale(0.97);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.vs {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+// Results
+
+.results {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: 28px 24px;
+  box-shadow: $shadow-md;
+}
+
+.results-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.ranking-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ranking-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  background: $color-bg;
+  border-radius: $radius-sm;
+
+  &.gold {
+    background: #fef3c7;
+    border: 1px solid #fde68a;
+
+    .rank-number {
+      background: $color-gold;
+      color: #fff;
+    }
+  }
+
+  &.silver {
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+
+    .rank-number {
+      background: #9ca3af;
+      color: #fff;
+    }
+  }
+
+  &.bronze {
+    background: #fef0e4;
+    border: 1px solid #fbd5ae;
+
+    .rank-number {
+      background: #cd7f32;
+      color: #fff;
+    }
+  }
+}
+
+.rank-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: $radius-full;
+  background: $color-border;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: $color-text-secondary;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.rank-name {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.no-compare {
+  text-align: center;
+  color: $color-text-secondary;
+  padding: 20px 0;
+}
+
+// Items (secondary)
+
+.items {
+  padding-top: 4px;
+}
+
+.items-heading {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $color-text-secondary;
+  margin-bottom: 10px;
+}
+
+.items-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.item-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: $color-tag-bg;
+  color: $color-text-secondary;
+  border-radius: $radius-full;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+// Responsive
+
+@media (max-width: 480px) {
+  body {
+    padding: 16px 12px;
+  }
+
+  .app {
+    gap: 20px;
+  }
+
+  .compare {
+    padding: 24px 16px;
+  }
+
+  .compare-buttons {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .choice-btn {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .vs {
+    display: none;
+  }
 }
