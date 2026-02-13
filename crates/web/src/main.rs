@@ -2,10 +2,73 @@ mod stepper;
 
 use std::sync::Arc;
 
-use leptos::mount::mount_to_body;
+use leptos::ev;
 use leptos::prelude::*;
 use rankfast::estimate_turns;
 use stepper::{Step, Stepper};
+
+/// Reads the URL hash fragment and parses it into an answer history.
+///
+/// Each `a` character maps to `true` (left is better), each `b` maps
+/// to `false`. All other characters are silently ignored.
+fn read_hash_answers() -> Vec<bool> {
+    let hash = window().location().hash().unwrap_or_default();
+
+    hash.chars()
+        .filter_map(|c| match c {
+            'a' => Some(true),
+            'b' => Some(false),
+            _ => None,
+        })
+        .collect()
+}
+
+/// Pushes the answer history to the URL hash as a new history entry.
+///
+/// Each `true` becomes `a`, each `false` becomes `b`.
+fn push_hash(answers: &[bool]) {
+    let hash: String = answers.iter().map(|&b| if b { 'a' } else { 'b' }).collect();
+
+    let win = window();
+    if let Ok(h) = win.history() {
+        let url = format!("#{hash}");
+        let _ = h.push_state_with_url(&wasm_bindgen::JsValue::NULL, "", Some(&url));
+    }
+}
+
+/// Replays the answer sequence through a fresh stepper and returns
+/// the resulting UI state.
+fn derive_state(n: usize, answers: &[bool]) -> RankState {
+    let mut stepper = Stepper::new(n);
+    let mut last_step = stepper.step();
+
+    for &answer in answers {
+        if last_step == Step::Done {
+            break;
+        }
+        last_step = stepper.answer(answer);
+    }
+
+    match last_step {
+        Step::Compare { a, b } => RankState {
+            current: Some((a, b)),
+            ranking: None,
+            comparisons: stepper.comparisons_made(),
+        },
+        Step::Done => RankState {
+            current: None,
+            ranking: stepper.take_order(),
+            comparisons: stepper.comparisons_made(),
+        },
+    }
+}
+
+#[derive(Clone, PartialEq)]
+struct RankState {
+    current: Option<(usize, usize)>,
+    ranking: Option<Vec<usize>>,
+    comparisons: usize,
+}
 
 fn main() {
     mount_to_body(App);
@@ -24,36 +87,21 @@ fn App() -> impl IntoView {
         "White".to_string(),
     ]);
 
-    let estimate = estimate_turns(items.len());
+    let n = items.len();
+    let estimate = estimate_turns(n);
 
-    let mut stepper = Stepper::new(items.len());
-    let initial = stepper.step();
-    let (current_init, ranking_init) = match initial {
-        Step::Compare { a, b } => (Some((a, b)), None),
-        Step::Done => (None, stepper.take_order()),
-    };
+    // The URL hash is the source of truth. This signal mirrors it.
+    let (answers, set_answers) = signal(read_hash_answers());
 
-    let (current, set_current) = signal(current_init);
-    let (ranking, set_ranking) = signal::<Option<Vec<usize>>>(ranking_init);
-    let (comparisons, set_comparisons) = signal(stepper.comparisons_made());
-    let (_, set_stepper) = signal(stepper);
+    // All UI state is derived from the answer history.
+    let state = Memo::new(move |_| derive_state(n, &answers.get()));
 
-    let apply_answer = Arc::new(move |better_is_a: bool| {
-        set_stepper.update(|stepper| {
-            let step = stepper.answer(better_is_a);
-            set_comparisons.set(stepper.comparisons_made());
-            match step {
-                Step::Compare { a, b } => {
-                    set_current.set(Some((a, b)));
-                    set_ranking.set(None);
-                }
-                Step::Done => {
-                    set_current.set(None);
-                    let order = stepper.take_order().unwrap_or_default();
-                    set_ranking.set(Some(order));
-                }
-            }
-        });
+    // Sync URL → signal on back/forward and manual hash edits.
+    let _popstate = window_event_listener(ev::popstate, move |_| {
+        set_answers.set(read_hash_answers());
+    });
+    let _hashchange = window_event_listener(ev::hashchange, move |_| {
+        set_answers.set(read_hash_answers());
     });
 
     view! {
@@ -67,7 +115,7 @@ fn App() -> impl IntoView {
                 <div class="progress-text">
                     <span>"Comparison"</span>
                     <span class="progress-numbers">
-                        {move || comparisons.get()} " / " {estimate}
+                        {move || state.get().comparisons} " / " {estimate}
                     </span>
                 </div>
                 <div class="progress-bar">
@@ -75,7 +123,7 @@ fn App() -> impl IntoView {
                         class="progress-fill"
                         style:width=move || {
                             let pct = if estimate > 0 {
-                                100 * comparisons.get() / estimate
+                                100 * state.get().comparisons / estimate
                             } else {
                                 100
                             };
@@ -89,7 +137,8 @@ fn App() -> impl IntoView {
                 let items = items.clone();
                 move || {
                     let items = items.clone();
-                    match (ranking.get(), current.get()) {
+                    let s = state.get();
+                    match (s.ranking, s.current) {
                         (Some(order), _) => view! {
                             <section class="results">
                                 <h2 class="results-title">"Your Ranking"</h2>
@@ -118,13 +167,17 @@ fn App() -> impl IntoView {
                         }
                         .into_any(),
                         (None, Some((a, b))) => {
-                            let on_a = {
-                                let apply_answer = apply_answer.clone();
-                                move |_| apply_answer(true)
+                            let on_a = move |_| {
+                                set_answers.update(|ans| {
+                                    ans.push(true);
+                                    push_hash(ans);
+                                });
                             };
-                            let on_b = {
-                                let apply_answer = apply_answer.clone();
-                                move |_| apply_answer(false)
+                            let on_b = move |_| {
+                                set_answers.update(|ans| {
+                                    ans.push(false);
+                                    push_hash(ans);
+                                });
                             };
 
                             view! {

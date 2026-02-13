@@ -6,6 +6,8 @@ edition.workspace = true
 [dependencies]
 leptos = { workspace = true }
 rankfast = { workspace = true }
+wasm-bindgen = { workspace = true }
+web-sys = { workspace = true }
 
 [lints]
 workspace = true
