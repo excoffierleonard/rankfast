@@ -1,0 +1,135 @@
+name: CI/CD
+
+permissions:
+  contents: read
+  # packages: write
+  pages: write
+  id-token: write
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    name: CI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Format
+        run: cargo fmt --all -- --check
+
+      - name: Lint
+        run: cargo clippy --workspace --all-features --all-targets -- -D warnings
+
+      - name: Build
+        run: cargo build --workspace --all-features --all-targets
+
+      - name: Test
+        run: cargo test --workspace --all-features --all-targets
+
+      - name: Verify Documentation
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+        run: cargo doc --no-deps --all-features --document-private-items
+
+    #   - name: Dry run publish for crate
+    #     run: |
+    #       cargo publish --dry-run 2>&1 | tee /dev/stderr | grep -v "^warning: aborting upload due to dry run" | grep -q "^warning:" && exit 1 || true
+
+  # publish-crate:
+  #   name: Publish crate to crates.io
+  #   needs: ci
+  #   if: github.ref_name == 'main' && github.event_name == 'push'
+  #   runs-on: ubuntu-latest
+  #   environment: production
+  #   steps:
+  #     - uses: actions/checkout@v6
+
+  #     - name: Cache Rust dependencies
+  #       uses: Swatinem/rust-cache@v2
+
+  #     - name: Publish to crates.io
+  #       run: cargo publish --token ${{ secrets.CRATES_IO_TOKEN }}
+
+  # publish-github:
+  #   name: Publish to GitHub Releases
+  #   needs: publish-crate
+  #   if: github.ref_name == 'main' && github.event_name == 'push'
+  #   runs-on: ubuntu-latest
+  #   environment: production
+  #   permissions:
+  #     contents: write
+  #   env:
+  #     BINARY_NAME: fib
+  #   steps:
+  #     - uses: actions/checkout@v6
+
+  #     - name: Add musl target
+  #       run: rustup target add x86_64-unknown-linux-musl
+
+  #     - name: Cache Rust dependencies
+  #       uses: Swatinem/rust-cache@v2
+
+  #     - name: Build release binary
+  #       run: cargo build --release --target x86_64-unknown-linux-musl
+
+  #     - name: Get version from Cargo.toml
+  #       id: version
+  #       run: echo "version=$(cargo metadata --format-version 1 --no-deps | jq -r '.packages[0].version')" >> $GITHUB_OUTPUT
+
+  #     - name: Prepare release artifact
+  #       run: mv target/x86_64-unknown-linux-musl/release/$BINARY_NAME $BINARY_NAME-${{ steps.version.outputs.version }}-x86_64-unknown-linux-musl
+
+  #     - name: Create GitHub Release
+  #       uses: softprops/action-gh-release@v2
+  #       with:
+  #         tag_name: ${{ steps.version.outputs.version }}
+  #         name: ${{ steps.version.outputs.version }}
+  #         files: ${{ env.BINARY_NAME }}-${{ steps.version.outputs.version }}-x86_64-unknown-linux-musl
+  #         generate_release_notes: true
+  #         make_latest: true
+
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    # needs: publish-crate
+    needs: ci
+    if: github.ref_name == 'main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Add WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+
+      - name: Install Trunk
+        run: cargo install trunk
+
+      - name: Build with Trunk
+        run: trunk build --release --config crates/web/Trunk.toml
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: "./crates/web/dist"
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
