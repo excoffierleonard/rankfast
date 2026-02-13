@@ -4,6 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
+console_error_panic_hook = { workspace = true }
+js-sys = { workspace = true }
 leptos = { workspace = true }
 rankfast = { workspace = true }
 wasm-bindgen = { workspace = true }

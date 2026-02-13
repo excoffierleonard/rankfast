@@ -302,6 +302,93 @@ body {
   font-weight: 500;
 }
 
+// Input form
+
+.input-form {
+  background: $color-surface;
+  border: 1px solid $color-border;
+  border-radius: $radius-lg;
+  padding: 32px 24px;
+  box-shadow: $shadow-md;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.input-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.input-hint {
+  font-size: 0.875rem;
+  color: $color-text-secondary;
+  text-align: center;
+}
+
+.item-textarea {
+  width: 100%;
+  min-height: 160px;
+  padding: 12px 14px;
+  font-family: $font-stack;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: $color-text;
+  background: $color-bg;
+  border: 1px solid $color-border;
+  border-radius: $radius-md;
+  resize: vertical;
+  transition: border-color 0.15s ease;
+
+  &:focus {
+    outline: none;
+    border-color: $color-primary;
+    box-shadow: 0 0 0 3px rgba($color-primary, 0.12);
+  }
+
+  &::placeholder {
+    color: #9ca3af;
+  }
+}
+
+.start-btn {
+  width: 100%;
+  padding: 14px 24px;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: $color-surface;
+  background: $color-primary;
+  border: 2px solid $color-primary;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover:not(:disabled) {
+    background: $color-primary-hover;
+    border-color: $color-primary-hover;
+    box-shadow: 0 4px 14px rgba($color-primary, 0.35);
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    box-shadow: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
 // Responsive
 
 @media (max-width: 480px) {
@@ -313,7 +400,8 @@ body {
     gap: 20px;
   }
 
-  .compare {
+  .compare,
+  .input-form {
     padding: 24px 16px;
   }
 
